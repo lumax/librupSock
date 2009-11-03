@@ -16,19 +16,19 @@ int main(void)
 {
   int tmp = 0;
   char buf[100];
-  _sockCon_t sockCon_client;
+  _sockSocket_t sockCon_client;
 
-  memset(&sockCon_client, 0, sizeof(_sockCon_t));
-
+  memset(&sockCon_client, 0, sizeof(_sockSocket_t));
 
   printf("client\n");
-  ec_neg1(sockClientConnect(&sockCon_client,SOCKNAME) )
+  ec_neg1(sockCreateAfSocket(&sockCon_client,SOCKNAME) )
+  ec_neg1(sockClientConnect(&sockCon_client) )
   
-    ec_neg1( write(sockCon_client.fd_com, "Hello!", 7 ) ) 
-    ec_neg1( tmp = read(sockCon_client.fd_com, buf, sizeof(buf)) )
+    ec_neg1( write(sockCon_client.fd, "Hello!", 7 ) ) 
+    ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
     printf("Client got \"%s\", bytes: %i\n", buf,tmp);
 
-  ec_neg1(sockClientClose(&sockCon_client) )
+  ec_neg1(close(sockCon_client.fd) )
   exit(EXIT_SUCCESS);
   
   EC_CLEANUP_BGN

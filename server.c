@@ -16,45 +16,24 @@ Bastian Ruppert
 
 #define SOCKNAME "RUPSOCKET"
 
-_pollMngPollSource_t  pollMngPollSources[1];
-/*
-_pollMngPollSource_t  pollMngPollSources[]={
-  [0] = {
-    .pollfd_t.fd = 0,//myAmazingFileDescriptor
-    //  .name = "server",
-    //.readFnk = 0,
-    //.writeFnk = 0,
-  },
-}
-*/
-
-static int theReadFnk(char * buf,int len,int index);
-static int thePollhupFnk(int index);
-//static int theWriteFnk(char * buf);  
-static _pollMngPollSource_t pollSrc;
+static _sockSocket_t sockCon_server;
+static int fd_com;
 
 int main(void)
 {
-  _sockCon_t sockCon_server;
-
-  memset(&sockCon_server, 0, sizeof(_sockCon_t));
+  char buf[100];
+  memset(&sockCon_server, 0, sizeof(_sockSocket_t));
 
   printf("server\n");
-  ec_neg1(sockServerConnect(&sockCon_server,SOCKNAME) ) //block until success
+  ec_neg1(sockCreateAfSocket(&sockCon_server,SOCKNAME) )
+    ec_neg1(sockServerConnect(&sockCon_server,SOCKNAME,&fd_com) )//block until success
 
-  pollSrc.pollfd_t.fd = sockCon_server.fd_com;
-  pollSrc.readFnk = theReadFnk;
-  pollSrc.pollhupFnk = thePollhupFnk;
-  //pollSrc.writeFnk = theWriteFnk;
-  pollMngPollSources[0] = pollSrc;
-  ec_neg1( pollMngInit(pollMngPollSources) )
-  
-  ec_neg1( pollMngPoll(pollMngPollSources) )
-  //ec_neg1( read(sockCon_server.fd_com, buf, sizeof(buf)) )
-  //printf("Server got \"%s\"\n", buf);
-  //ec_neg1( write(sockCon_server.fd_com, "Goodbye!", 9 ) )
+  ec_neg1( read(fd_com, buf, sizeof(buf)) )
+  printf("Server got \"%s\"\n", buf);
+  ec_neg1( write(fd_com, "Goodbye!", 9 ) )
 
-  ec_neg1(sockServerClose(&sockCon_server) )
+  ec_neg1(close(sockCon_server.fd) )
+  ec_neg1(close(fd_com) )
     exit(EXIT_SUCCESS);
   
   EC_CLEANUP_BGN
@@ -62,6 +41,7 @@ int main(void)
   EC_CLEANUP_END
 }
 
+/*
 static int theReadFnk(char * buf,int len,int index)
 {
   printf("Server bekam \"%s\" len:%i\n", buf,len);
@@ -80,7 +60,7 @@ static int thePollhupFnk(int index)
 {
   printf("thepollhubFnk index : %i\n",index);
   return 0;
-}
+}*/
 
 /*static char * hallo = "hallo";
 static int theWriteFnk(char * buf)

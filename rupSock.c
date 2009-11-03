@@ -14,19 +14,26 @@ Bastian Ruppert
 
 /*[pgm]*/
 
-int sockClientConnect(_sockCon_t * sCon, char * socketname)
+
+int sockCreateAfSocket(_sockSocket_t * sock,char * socketname)
 {
-  strcpy(sCon->sa.sun_path, socketname);
-  sCon->sa.sun_family = AF_UNIX;
-  if(sCon->fd_com)
+  strcpy(sock->sa.sun_path, socketname);
+  sock->sa.sun_family = AF_UNIX;
+  if(sock->fd)
     {
       errno = EINVAL;
-      return -1;
+      EC_FAIL
     }
-  
-  ec_neg1( sCon->fd_com = socket(AF_UNIX, SOCK_STREAM, 0) )
-  
-  while (connect(sCon->fd_com, (struct sockaddr *)&sCon->sa, sizeof(sCon->sa)) == -1)
+  ec_neg1( sock->fd = socket(AF_UNIX, SOCK_STREAM, 0) ) 
+    return 0;
+  EC_CLEANUP_BGN
+    return -1;
+  EC_CLEANUP_END
+}
+
+int sockClientConnect(_sockSocket_t * sCon)
+{
+  while (connect(sCon->fd, (struct sockaddr *)&sCon->sa, sizeof(sCon->sa)) == -1)
     {
       if (errno == ENOENT) 
 	{
@@ -45,44 +52,17 @@ int sockClientConnect(_sockCon_t * sCon, char * socketname)
   EC_CLEANUP_END
 }
 
-int sockClientClose(_sockCon_t * sCon)
-{
-  ec_neg1( close(sCon->fd_com) )
-    return 0;
-  EC_CLEANUP_BGN
-    return -1;
-  EC_CLEANUP_END
-}
 
-int sockServerConnect(_sockCon_t * sCon, char * socketname)
+
+int sockServerConnect(_sockSocket_t * sCon,char * socketname,int * fd_com)
 {   
   (void)unlink(socketname);
 
-  strcpy(sCon->sa.sun_path, socketname);
-  sCon->sa.sun_family = AF_UNIX;
-  if(sCon->fd_com||sCon->fd_skt)
-    {
-      errno = EINVAL;
-      return -1;
-    }
-  
-  ec_neg1( sCon->fd_skt = socket(AF_UNIX, SOCK_STREAM, 0) )
-
-  ec_neg1( bind(sCon->fd_skt, (struct sockaddr *)&sCon->sa, sizeof(sCon->sa)) )
-    ec_neg1( listen(sCon->fd_skt, 2) )//SOMAXCONN) )
-  ec_neg1( sCon->fd_com = accept(sCon->fd_skt, NULL, 0) )
+  ec_neg1( bind(sCon->fd, (struct sockaddr *)&sCon->sa, sizeof(sCon->sa)) )
+    ec_neg1( listen(sCon->fd, 2) )//SOMAXCONN) )
+  ec_neg1( *fd_com = accept(sCon->fd, NULL, 0) )
     return 0;
   
-  EC_CLEANUP_BGN
-    return -1;
-  EC_CLEANUP_END
-}
-
-int sockServerClose(_sockCon_t * sCon)
-{
-  ec_neg1( close(sCon->fd_skt) )
-  ec_neg1( close(sCon->fd_com) )
-    return 0;
   EC_CLEANUP_BGN
     return -1;
   EC_CLEANUP_END
