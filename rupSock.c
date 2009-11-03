@@ -9,14 +9,12 @@ Bastian Ruppert
 #include <defs.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <pollManager.h>
 
 #include "rupSock.h"
 
-/*[pgm]*/
-
-
 int sockCreateAfSocket(_sockSocket_t * sock,char * socketname)
-{
+ {
   strcpy(sock->sa.sun_path, socketname);
   sock->sa.sun_family = AF_UNIX;
   if(sock->fd)
@@ -31,9 +29,21 @@ int sockCreateAfSocket(_sockSocket_t * sock,char * socketname)
   EC_CLEANUP_END
 }
 
-int sockClientConnect(_sockSocket_t * sCon)
+/*      Bsp: 
+ *            _pollMngSrc_t  pollMngPollSources[]={
+ *             [0] = {
+ *                    .pollfd_t.fd = -1,
+ *                    .name = "myAmazingFileDescriptor",
+ *                    .readFnk = myReadFnk,
+ *                   },
+ *            };*/
+int sockClientConnect(_pollMngSrc_t * sCon,char * socketname)
 {
-  while (connect(sCon->fd, (struct sockaddr *)&sCon->sa, sizeof(sCon->sa)) == -1)
+  struct sockaddr_un sa;
+  strcpy(sa.sun_path, socketname);
+  sa.sun_family = AF_UNIX;
+  ec_neg1( sCon->fd = socket(AF_UNIX, SOCK_STREAM, 0) ) 
+  while (connect(sCon->fd, (struct sockaddr *)&sa, sizeof(sa)) == -1)
     {
       if (errno == ENOENT) 
 	{

@@ -28,10 +28,18 @@ int main(void)
   ec_neg1(sockCreateAfSocket(&sockCon_server,SOCKNAME) )
     ec_neg1(sockServerConnect(&sockCon_server,SOCKNAME,&fd_com) )//block until success
 
-  ec_neg1( read(fd_com, buf, sizeof(buf)) )
-  printf("Server got \"%s\"\n", buf);
-  ec_neg1( write(fd_com, "Goodbye!", 9 ) )
-
+     ec_neg1( write(fd_com, "IchBinServer!\n", 15 ) )
+    //   ec_neg1( read(fd_com, buf, sizeof(buf)) )
+    //    printf("Server got \"%s\"\n", buf);
+    // ec_neg1( write(fd_com, "IchBinServer2!", 15-1 ) )
+      ec_neg1( read(fd_com, buf, sizeof(buf)) )
+     printf("Server got \"%s\"\n", buf);
+ sleep(1);
+  ec_neg1( write(fd_com, "Goodbye\n", 9 ) )
+ec_neg1( write(fd_com, "Goodbye\n", 9 ) )
+ec_neg1( write(fd_com, "Goodbye\n", 9 ) )
+ec_neg1( write(fd_com, "Goodbye\n!", 10 ) )
+    sleep(3);
   ec_neg1(close(sockCon_server.fd) )
   ec_neg1(close(fd_com) )
     exit(EXIT_SUCCESS);
