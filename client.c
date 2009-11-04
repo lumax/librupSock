@@ -14,16 +14,29 @@ Bastian Ruppert
 
 #define SOCKNAME "RUPSOCKET"
 
-static char * hallo = "huhu";
-static int theWriteFnk(char * buf,int index)
+static _pollMngSrc_t PollSrc[];
+
+static int theSTDReadFnk(char * buf,int len,int pMngIndex,void * dat)
 {
-  buf = hallo;
-  return sizeof(hallo);
+  //_pollMngSrc_t * pollSrc = (_pollMngSrc_t*)dat;
+  //ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
+  int i = 0;
+  printf("SDTIN Read Fnk\n");
+  for(i=0;i<len;i++)
+    {
+      printf("|%c", buf[i]);
+    }
+  //pollMngSuspendPolling();
+  ec_neg1( write(PollSrc[0].fd,buf,len) ) 
+  return 0;
+  EC_CLEANUP_BGN
+    return -1;
+  EC_CLEANUP_END
 }
 
 static int theReadFnk(char * buf,int len,int pMngIndex,void * dat)
 {
-  _pollMngSrc_t * pollSrc = (_pollMngSrc_t*)dat;
+  //_pollMngSrc_t * pollSrc = (_pollMngSrc_t*)dat;
   //ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
   int i = 0;
   for(i=0;i<len;i++)
@@ -31,11 +44,11 @@ static int theReadFnk(char * buf,int len,int pMngIndex,void * dat)
       printf("|%c", buf[i]);
     }
   //pollMngSuspendPolling();
-  ec_neg1( write(pollSrc->fd, "Hello2000!", 11 ) ) 
+  //ec_neg1( write(pollSrc->fd, "Hello2000!", 11 ) ) 
   return 0;
-  EC_CLEANUP_BGN
+  /*EC_CLEANUP_BGN
     return -1;
-  EC_CLEANUP_END
+    EC_CLEANUP_END*/
 }
 
 static int thePollUpFnk(int pMngIndex)
@@ -45,47 +58,40 @@ static int thePollUpFnk(int pMngIndex)
   return 0;
 }
 
-/*_pollMngSrc_t cPollSrc = {
-  .readFnk = theReadFnk,
-  //.writeFnk = theWriteFnk,
-  .pollhupFnk = thePollUpFnk,
-  };*/
-
 static _pollMngSrc_t PollSrc[]={
   [0]={
     .readFnk = theReadFnk,
     //.writeFnk = theWriteFnk,
     .pollhupFnk = thePollUpFnk,
   },
+  [1]={
+    .fd = 0,       //fd STDIO
+    .readFnk = theSTDReadFnk,
+    //.writeFnk = theWriteFnk,
+    .pollhupFnk = thePollUpFnk,
+    },
 };
+
+ 
 
 int main(void)
 {
-  int tmp = 0;
-  char buf[100];
-  _sockSocket_t sockCon_client;
-  //pollMngPollSources[0]=cPollSrc;
-
-  memset(&sockCon_client, 0, sizeof(_sockSocket_t));
-
   printf("client2000\n");
-  //ec_neg1(sockCreateAfSocket(&sockCon_client,SOCKNAME) )
+
   ec_neg1(sockClientConnect(&PollSrc[0],SOCKNAME) )
     
-   pollMngInit(PollSrc);
-    ec_neg1( write(PollSrc[0].fd, "Hello!", 7 ) ) 
-
-   
-
-    pollMngPoll(PollSrc);
-
+    pollMngInit(PollSrc,2);
+  ec_neg1( write(PollSrc[0].fd, "hello\n", 7 ) ) 
     
-  
+   
+    
+    pollMngPoll(PollSrc,2);
+
     //ec_neg1( write(sockCon_client.fd, "Hello!", 7 ) ) 
     //ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
     //printf("Client got \"%s\", bytes: %i\n", buf,tmp);
 
-  ec_neg1(close(sockCon_client.fd) )
+  ec_neg1(close(PollSrc[0].fd) )
   exit(EXIT_SUCCESS);
   
   EC_CLEANUP_BGN

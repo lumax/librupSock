@@ -13,10 +13,10 @@ typedef struct
 }_sockSocket_t;
 
 
-int sockCreateAfSocket(_sockSocket_t * sock,char * socketname);
+//int sockCreateAfSocket(_sockSocket_t * sock,char * socketname);
 int sockClientConnect(_pollMngSrc_t * sock,char * socketname);
 
-int sockServerConnect(_sockSocket_t * sock,char * socketname,int * fd_com);
+int sockServerConnect(_pollMngSrc_t * sock,char * socketname,int * socketFd);
 
 #endif /* __RUPSOCK_H__ */
 /*typedef struct

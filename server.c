@@ -16,32 +16,70 @@ Bastian Ruppert
 
 #define SOCKNAME "RUPSOCKET"
 
-static _sockSocket_t sockCon_server;
-static int fd_com;
+
+static int theReadFnk(char * buf,int len,int pMngIndex,void * dat)
+{
+  _pollMngSrc_t * pollSrc = (_pollMngSrc_t*)dat;
+  //ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
+  int i = 0;
+  for(i=0;i<len;i++)
+    {
+      printf("|%c", buf[i]);
+    }
+  //pollMngSuspendPolling();
+  ec_neg1( write(pollSrc->fd, "IchBinServer!", 14 ) ) 
+  return 0;
+  EC_CLEANUP_BGN
+    return -1;
+  EC_CLEANUP_END
+}
+
+static int thePollUpFnk(int pMngIndex)
+{
+  printf("pollUp index : %i\n",pMngIndex);
+  pollMngSuspendPolling();
+  return 0;
+}
+
+
+static _pollMngSrc_t PollSrc[]={
+  [0]={
+    .readFnk = theReadFnk,
+    .pollhupFnk = thePollUpFnk,
+  },
+};
 
 int main(void)
 {
-  char buf[100];
-  memset(&sockCon_server, 0, sizeof(_sockSocket_t));
-
+  //char buf[100];
+  int SocketFd = -1;
+  //memset(&sockCon_server, 0, sizeof(_sockSocket_t));
   printf("server\n");
-  ec_neg1(sockCreateAfSocket(&sockCon_server,SOCKNAME) )
-    ec_neg1(sockServerConnect(&sockCon_server,SOCKNAME,&fd_com) )//block until success
+  
+  ec_neg1(sockServerConnect(&PollSrc[0],SOCKNAME,&SocketFd) )
+    
+  ec_neg1( write(PollSrc[0].fd, "IchBinServer!\n", 15 ) )
 
-     ec_neg1( write(fd_com, "IchBinServer!\n", 15 ) )
-    //   ec_neg1( read(fd_com, buf, sizeof(buf)) )
-    //    printf("Server got \"%s\"\n", buf);
-    // ec_neg1( write(fd_com, "IchBinServer2!", 15-1 ) )
+
+    pollMngInit(PollSrc,1);
+    ec_neg1( write(PollSrc[0].fd, "Hello!", 7 ) ) 
+
+   
+
+      pollMngPoll(PollSrc,1);
+
+    /*
       ec_neg1( read(fd_com, buf, sizeof(buf)) )
      printf("Server got \"%s\"\n", buf);
  sleep(1);
   ec_neg1( write(fd_com, "Goodbye\n", 9 ) )
 ec_neg1( write(fd_com, "Goodbye\n", 9 ) )
 ec_neg1( write(fd_com, "Goodbye\n", 9 ) )
-ec_neg1( write(fd_com, "Goodbye\n!", 10 ) )
+ec_neg1( write(fd_com, "Goodbye!\n", 10 ) )
     sleep(3);
-  ec_neg1(close(sockCon_server.fd) )
-  ec_neg1(close(fd_com) )
+    */
+  ec_neg1(close(SocketFd) )
+  ec_neg1(close(PollSrc[0].fd) )
     exit(EXIT_SUCCESS);
   
   EC_CLEANUP_BGN
