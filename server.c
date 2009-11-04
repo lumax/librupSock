@@ -56,7 +56,6 @@ static _pollMngServer_t ServerPollSrc = {
 int main(void)
 {
   //char buf[100];
-  int SocketFd = -1;
   //memset(&sockCon_server, 0, sizeof(_sockSocket_t));
   printf("server\n");
   
@@ -69,7 +68,7 @@ int main(void)
     ec_neg1( write(PollSrc[0].fd, "Hello!", 7 ) ) 
 
    
-
+ 
       pollMngPoll(PollSrc,1);
 
     /*
@@ -82,8 +81,7 @@ ec_neg1( write(fd_com, "Goodbye\n", 9 ) )
 ec_neg1( write(fd_com, "Goodbye!\n", 10 ) )
     sleep(3);
     */
-  ec_neg1(close(SocketFd) )
-  ec_neg1(close(PollSrc[0].fd) )
+    ec_neg1(sockServerClose(&ServerPollSrc) )
     exit(EXIT_SUCCESS);
   
   EC_CLEANUP_BGN

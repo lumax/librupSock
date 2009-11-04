@@ -79,6 +79,17 @@ int sockServerConnect(_pollMngServer_t * sCon,char * socketname)
   EC_CLEANUP_END
 }
 
+int sockServerClose(_pollMngServer_t * sCon)
+{
+  ec_neg1(close(sCon->socketFd) )
+  ec_neg1(close(sCon->pPollSrc->fd) )
+    exit(EXIT_SUCCESS);
+  
+  EC_CLEANUP_BGN
+    exit(EXIT_FAILURE);
+  EC_CLEANUP_END
+}
+
 
 /*#define SOCKNAME "RUPSOCKET"
 int main(void)
