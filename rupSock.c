@@ -61,7 +61,24 @@ int sockClientConnect(_pollMngSrc_t * sCon,char * socketname)
   EC_CLEANUP_END
 }
 
-static int ServerPollHupFnk(int index)
+static int ServerPollReadFnk(char * buf,int len,int pMngIndex,void * dat)
+{
+  _pollMngServer_t * sCon = (_pollMngServer_t *)dat;
+
+  //eine Neue Connection!
+  ec_neg1( sCon->pPollSrc->fd = accept(sCon->socketFd, NULL, 0) )
+    
+  //original Fnkpnt wiederherstellen 
+  sCon->pPollSrc->readFnk = sCon->readFnk;
+  
+  return 0;
+  
+  EC_CLEANUP_BGN
+    return -1;
+  EC_CLEANUP_END
+}
+
+static int ServerPollHupFnk(int index,void * dat)
 {
   return 0;
 }
@@ -69,6 +86,12 @@ static int ServerPollHupFnk(int index)
 int sockServerConnect(_pollMngServer_t * sCon,char * socketname)
 {   
   struct sockaddr_un sa;
+  /* if(sCon->pPollSrc->pollhupFnk)
+    {
+      errno = EINVAL;
+      return -1;
+      }*/
+
   (void)unlink(socketname);
   strcpy(sa.sun_path, socketname);
   sa.sun_family = AF_UNIX;
@@ -76,6 +99,15 @@ int sockServerConnect(_pollMngServer_t * sCon,char * socketname)
 
   ec_neg1( bind(sCon->socketFd, (struct sockaddr *)&sa, sizeof(sa)) )
   ec_neg1( listen(sCon->socketFd, 2) )//SOMAXCONN) )
+
+    /*  sCon->pPollSrc->userDat = (void *)sCon;// Server-struct bekannt machen
+  sCon->readFnk = sCon->pPollSrc->readFnk;     //Fnk pointer sichern
+  sCon->pollhupFnk = sCon->pPollSrc->pollhupFnk;
+
+  sCon->pPollSrc->readFnk = ServerPollReadFnk;//Fnkpnt mit listenern belegen
+  sCon->pPollSrc->pollhupFnk = ServerPollHupFnk;
+  sCon->pPollSrc->*/
+
   ec_neg1( sCon->pPollSrc->fd = accept(sCon->socketFd, NULL, 0) )
     return 0;
   

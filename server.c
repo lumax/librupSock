@@ -16,10 +16,11 @@ Bastian Ruppert
 
 #define SOCKNAME "RUPSOCKET"
 
+static _pollMngSrcContainer_t PollSrc;
 
 static int theReadFnk(char * buf,int len,int pMngIndex,void * dat)
 {
-  _pollMngSrc_t * pollSrc = (_pollMngSrc_t*)dat;
+  //_pollMngSrc_t * pollSrc = (_pollMngSrc_t*)dat;
   //ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
   int i = 0;
   for(i=0;i<len;i++)
@@ -27,14 +28,14 @@ static int theReadFnk(char * buf,int len,int pMngIndex,void * dat)
       printf("|%c", buf[i]);
     }
   //pollMngSuspendPolling();
-  ec_neg1( write(pollSrc->fd, "IchBinServer!", 14 ) ) 
+  ec_neg1( write(PollSrc.Srcs[0].fd, "Server!\n", 9 ) ) 
   return 0;
   EC_CLEANUP_BGN
     return -1;
   EC_CLEANUP_END
 }
 
-static int thePollUpFnk(int pMngIndex)
+static int thePollUpFnk(int pMngIndex,void * userDat)
 {
   printf("pollUp index : %i\n",pMngIndex);
   pollMngSuspendPolling();
