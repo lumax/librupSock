@@ -18,15 +18,6 @@ static _pollMngSrc_t PollSrc[];
 
 static int theSTDReadFnk(char * buf,int len,int pMngIndex,void * dat)
 {
-  //_pollMngSrc_t * pollSrc = (_pollMngSrc_t*)dat;
-  //ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
-  int i = 0;
-  printf("SDTIN Read Fnk\n");
-  for(i=0;i<len;i++)
-    {
-      printf("|%c", buf[i]);
-    }
-  //pollMngSuspendPolling();
   ec_neg1( write(PollSrc[0].fd,buf,len) ) 
   return 0;
   EC_CLEANUP_BGN
@@ -69,7 +60,7 @@ static _pollMngSrc_t PollSrc[]={
     .readFnk = theSTDReadFnk,
     //.writeFnk = theWriteFnk,
     .pollhupFnk = thePollUpFnk,
-    },
+  },
 };
 
  

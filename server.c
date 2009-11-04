@@ -49,6 +49,10 @@ static _pollMngSrc_t PollSrc[]={
   },
 };
 
+static _pollMngServer_t ServerPollSrc = {
+  .pPollSrc = &PollSrc[0],
+};
+
 int main(void)
 {
   //char buf[100];
@@ -56,11 +60,11 @@ int main(void)
   //memset(&sockCon_server, 0, sizeof(_sockSocket_t));
   printf("server\n");
   
-  ec_neg1(sockServerConnect(&PollSrc[0],SOCKNAME,&SocketFd) )
+  ec_neg1(sockServerConnect(&ServerPollSrc,SOCKNAME) )
     
   ec_neg1( write(PollSrc[0].fd, "IchBinServer!\n", 15 ) )
 
-
+ 
     pollMngInit(PollSrc,1);
     ec_neg1( write(PollSrc[0].fd, "Hello!", 7 ) ) 
 

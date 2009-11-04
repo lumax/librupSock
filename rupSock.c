@@ -61,19 +61,17 @@ int sockClientConnect(_pollMngSrc_t * sCon,char * socketname)
   EC_CLEANUP_END
 }
 
-
-
-int sockServerConnect(_pollMngSrc_t * sCon,char * socketname,int * socketFd )
+int sockServerConnect(_pollMngServer_t * sCon,char * socketname)
 {   
   struct sockaddr_un sa;
   (void)unlink(socketname);
   strcpy(sa.sun_path, socketname);
   sa.sun_family = AF_UNIX;
-  ec_neg1( *socketFd = socket(AF_UNIX, SOCK_STREAM, 0) ) 
+  ec_neg1( sCon->socketFd = socket(AF_UNIX, SOCK_STREAM, 0) ) 
 
-  ec_neg1( bind(*socketFd, (struct sockaddr *)&sa, sizeof(sa)) )
-  ec_neg1( listen(*socketFd, 2) )//SOMAXCONN) )
-  ec_neg1( sCon->fd = accept(*socketFd, NULL, 0) )
+  ec_neg1( bind(sCon->socketFd, (struct sockaddr *)&sa, sizeof(sa)) )
+  ec_neg1( listen(sCon->socketFd, 2) )//SOMAXCONN) )
+  ec_neg1( sCon->pPollSrc->fd = accept(sCon->socketFd, NULL, 0) )
     return 0;
   
   EC_CLEANUP_BGN
