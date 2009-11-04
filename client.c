@@ -14,11 +14,11 @@ Bastian Ruppert
 
 #define SOCKNAME "RUPSOCKET"
 
-static _pollMngSrc_t PollSrc[];
+static _pollMngSrcContainer_t PollSrc;
 
 static int theSTDReadFnk(char * buf,int len,int pMngIndex,void * dat)
 {
-  ec_neg1( write(PollSrc[0].fd,buf,len) ) 
+  ec_neg1( write(PollSrc.Srcs[0].fd,buf,len) ) 
   return 0;
   EC_CLEANUP_BGN
     return -1;
@@ -49,13 +49,13 @@ static int thePollUpFnk(int pMngIndex)
   return 0;
 }
 
-static _pollMngSrc_t PollSrc[]={
-  [0]={
+static _pollMngSrcContainer_t PollSrc={
+  .Srcs[0]={
     .readFnk = theReadFnk,
     //.writeFnk = theWriteFnk,
     .pollhupFnk = thePollUpFnk,
   },
-  [1]={
+  .Srcs[1]={
     .fd = 0,       //fd STDIO
     .readFnk = theSTDReadFnk,
     //.writeFnk = theWriteFnk,
@@ -69,20 +69,18 @@ int main(void)
 {
   printf("client2000\n");
 
-  ec_neg1(sockClientConnect(&PollSrc[0],SOCKNAME) )
+  ec_neg1(sockClientConnect(&PollSrc.Srcs[0],SOCKNAME) )
     
-    pollMngInit(PollSrc,2);
-  ec_neg1( write(PollSrc[0].fd, "hello\n", 7 ) ) 
+    pollMngInit(&PollSrc,2);
+  ec_neg1( write(PollSrc.Srcs[0].fd, "hello\n", 7 ) ) 
     
-   
-    
-    pollMngPoll(PollSrc,2);
+    pollMngPoll();
 
     //ec_neg1( write(sockCon_client.fd, "Hello!", 7 ) ) 
     //ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
     //printf("Client got \"%s\", bytes: %i\n", buf,tmp);
 
-  ec_neg1(close(PollSrc[0].fd) )
+  ec_neg1(close(PollSrc.Srcs[0].fd) )
   exit(EXIT_SUCCESS);
   
   EC_CLEANUP_BGN

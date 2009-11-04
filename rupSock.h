@@ -9,6 +9,7 @@ Bastian Ruppert
 typedef struct
 {
   _pollMngSrc_t * pPollSrc;
+  int isConnected;
   int socketFd;   //file descriptor Socket
   int (*readFnk)(char * buf,int len,int pMngIndex,void * dat);
   int (*pollhupFnk)(int pMngIndex); // Gegenseite hat aufgelegt

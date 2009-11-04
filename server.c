@@ -41,16 +41,15 @@ static int thePollUpFnk(int pMngIndex)
   return 0;
 }
 
-
-static _pollMngSrc_t PollSrc[]={
-  [0]={
+static _pollMngSrcContainer_t PollSrc={
+  .Srcs[0]={
     .readFnk = theReadFnk,
     .pollhupFnk = thePollUpFnk,
   },
 };
 
 static _pollMngServer_t ServerPollSrc = {
-  .pPollSrc = &PollSrc[0],
+  .pPollSrc = &PollSrc.Srcs[0],
 };
 
 int main(void)
@@ -61,15 +60,15 @@ int main(void)
   
   ec_neg1(sockServerConnect(&ServerPollSrc,SOCKNAME) )
     
-  ec_neg1( write(PollSrc[0].fd, "IchBinServer!\n", 15 ) )
+  ec_neg1( write(PollSrc.Srcs[0].fd, "IchBinServer!\n", 15 ) )
 
  
-    pollMngInit(PollSrc,1);
-    ec_neg1( write(PollSrc[0].fd, "Hello!", 7 ) ) 
+    pollMngInit(&PollSrc,1);
+    ec_neg1( write(PollSrc.Srcs[0].fd, "Hello!", 7 ) ) 
 
    
  
-      pollMngPoll(PollSrc,1);
+      pollMngPoll();
 
     /*
       ec_neg1( read(fd_com, buf, sizeof(buf)) )

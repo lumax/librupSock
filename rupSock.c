@@ -61,6 +61,11 @@ int sockClientConnect(_pollMngSrc_t * sCon,char * socketname)
   EC_CLEANUP_END
 }
 
+static int ServerPollHupFnk(int index)
+{
+  return 0;
+}
+
 int sockServerConnect(_pollMngServer_t * sCon,char * socketname)
 {   
   struct sockaddr_un sa;
