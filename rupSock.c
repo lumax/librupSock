@@ -14,29 +14,19 @@ static int ServerSocketFd;
 /* \brief Baut eine Client Socketverbindung auf.
  * \param sCon PollManagerSource, welche den file descriptor enthällt
  * \param socketname Name des ZielSockets
- * \return a positive value on success otherwise a negative error code
- * \retval 0 on success
+ * \return a positive fd on success otherwise a negative error code
  * \retval -1 bie einem Fehler, errno wird gesetzt
  */
-int sockClientConnect(_pollMngSrc_t * sCon,char * socketname)
+int sockClientConnect(char * socketname)
 {
   struct sockaddr_un sa;
+  int fd;
   strcpy(sa.sun_path, socketname);
   sa.sun_family = AF_UNIX;
-  ec_neg1( sCon->fd = socket(AF_UNIX, SOCK_STREAM, 0) ) 
-  while (connect(sCon->fd, (struct sockaddr *)&sa, sizeof(sa)) == -1)
-    {
-      if (errno == ENOENT) 
-	{
-	  sleep(1);
-	  continue;
-	}
-      else
-	{
-	  EC_FAIL
-	}
-    }
-    return 0;
+  ec_neg1( fd = socket(AF_UNIX, SOCK_STREAM, 0) ) 
+
+  ec_neg1(connect(fd, (struct sockaddr *)&sa, sizeof(sa) ) )
+    return fd;
   
   EC_CLEANUP_BGN
     return -1;

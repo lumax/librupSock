@@ -59,12 +59,12 @@ int main(void)
 {
   printf("client2000\n");
 
-  ec_neg1(sockClientConnect(&PollSrc.Srcs[0],SOCKNAME) )
+  ec_neg1(PollSrc.Srcs[0].fd = sockClientConnect(SOCKNAME) )
     
-    pollMngInit(&PollSrc,2);
+  ec_neg1( pollMngInit(&PollSrc,2 ) )
   ec_neg1( write(PollSrc.Srcs[0].fd, "hello\n", 7 ) ) 
     
-    pollMngPoll();
+    ec_neg1( pollMngPoll() )
 
     //ec_neg1( write(sockCon_client.fd, "Hello!", 7 ) ) 
     //ec_neg1( tmp = read(sockCon_client.fd, buf, sizeof(buf)) )
