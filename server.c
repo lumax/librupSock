@@ -63,9 +63,9 @@ int main(void)
   //char buf[100];
   //memset(&sockCon_server, 0, sizeof(_sockSocket_t));
   printf("server\n");
-  
-  ec_neg1(sockServerConnect(&ServerPollSrc,SOCKNAME) )
-    ec_neg1(sockServerConnect(&ServerPollSrc1,SOCKNAME) )
+  ec_neg1(createServerSocketFd(SOCKNAME) )
+  ec_neg1(sockServerConnect(&ServerPollSrc) )
+  ec_neg1(sockServerConnect(&ServerPollSrc1) )
     
     //ec_neg1( write(PollSrc.Srcs[0].fd, "IchBinServer!\n", 15 ) )
 
