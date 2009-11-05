@@ -12,7 +12,7 @@ Bastian Ruppert
 
 #include <pollManager.h>
 
-#include "rupSock.h"
+#include <rupSock.h>
 
 #define SOCKNAME "RUPSOCKET"
 

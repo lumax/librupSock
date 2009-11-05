@@ -10,7 +10,7 @@ Bastian Ruppert
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <pollManager.h>
-#include "rupSock.h"
+#include <rupSock.h>
 
 #define SOCKNAME "RUPSOCKET"
 
