@@ -2,10 +2,6 @@
 Bastian Ruppert
 */
 
-//#include <stdio.h>
-//#include <stdlib.h>
-
-
 #include <defs.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -47,16 +43,23 @@ int sockClientConnect(_pollMngSrc_t * sCon,char * socketname)
   EC_CLEANUP_END
 }
 
+/* \brief private function: Ein Client möchte verbinden, call accept 
+ * \param pMngIndex Position der Verbindung beim pollManager
+ * \param dat pointer auf die _pollMngSrc_t dieser Verbindung
+ * \return 0 on success otherwise -1
+ * \retval 0 on success
+ * \retval -1 bie einem Fehler, errno wird gesetzt
+ */
 static int ServerPollConListener(int pMngIndex,void * dat)
 {
-  _pollMngServer_t * sCon = (_pollMngServer_t *)dat;
+  _pollMngSrc_t * sCon = (_pollMngSrc_t *)dat;
 
   //eine Neue Connection!
-  ec_neg1( sCon->pPollSrc->fd = accept(sCon->pPollSrc->fd, NULL, 0) )
+  ec_neg1( sCon->fd = accept(sCon->fd, NULL, 0) )
     
-    sCon->pPollSrc->conListenerFnk=0;//conListenerFnk deaktivieren
+    sCon->conListenerFnk=0;//conListenerFnk deaktivieren
   
-  ec_neg1(pollMngSetSrc(sCon->pPollSrc,pMngIndex))//den pollMng über die neuen Verhältnisse informieren
+  ec_neg1(pollMngSetSrc(sCon,pMngIndex))//den pollMng über die neuen Verhältnisse informieren
   return 0;
     
   EC_CLEANUP_BGN
@@ -66,18 +69,22 @@ static int ServerPollConListener(int pMngIndex,void * dat)
 }
 
 /* \brief Die Verbindung wurde beendet, auf dem Socket auf eine Neue warten.
+ * \param pMngIndex Position der Verbindung beim pollManager
+ * \param dat pointer auf die _pollMngSrc_t dieser Verbindung
+ * \return 0 on success otherwise -1
+ * \retval 0 on success
+ * \retval -1 bie einem Fehler, errno wird gesetzt
  */
 static int ServerPollHupFnk(int pMngIndex,void * dat)
 {
-  _pollMngServer_t * sCon = (_pollMngServer_t *)dat;
+  _pollMngSrc_t * sCon = (_pollMngSrc_t *)dat;
   
-  ec_neg1(close(sCon->pPollSrc->fd) )
+  ec_neg1(close(sCon->fd) )
   
-  sCon->pPollSrc->fd = ServerSocketFd;//wir höhren jetzt wieder am Socket
-  sCon->pPollSrc->conListenerFnk = ServerPollConListener;//conListener wieder scharf machen
- 
-  
-  ec_neg1(pollMngSetSrc(sCon->pPollSrc,pMngIndex))//den pollMng über die neuen Verhältnisse informieren
+  sCon->fd = ServerSocketFd;//wir höhren jetzt wieder am Socket
+  sCon->conListenerFnk = ServerPollConListener;//conListener wieder scharf machen
+
+  ec_neg1(pollMngSetSrc(sCon,pMngIndex))//den pollMng über die neuen Verhältnisse informieren
 
   return 0;
   
@@ -88,6 +95,13 @@ static int ServerPollHupFnk(int pMngIndex,void * dat)
 }
 
 static struct sockaddr_un sa_Server;
+/* \brief Creates the Socket ans bind and listen, call this fnk once before any 
+ * \brief other fnk.
+ * \param socketname Name des ZielSockets
+ * \return 0 on success otherwise -1
+ * \retval 0 on success
+ * \retval -1 bie einem Fehler, errno wird gesetzt
+ */
 int createServerSocketFd(char * socketname)
 {
   (void)unlink(socketname);
@@ -98,45 +112,39 @@ int createServerSocketFd(char * socketname)
     
     ec_neg1( bind(ServerSocketFd, (struct sockaddr *)&sa_Server,\
 		  sizeof(sa_Server)) )
-    ec_neg1( listen(ServerSocketFd, 2))//SOMAXCONN) )
+    ec_neg1( listen(ServerSocketFd, 0))//SOMAXCONN) )
     return 0;  
   EC_CLEANUP_BGN
     return -1;
   EC_CLEANUP_END
 }
 
-int sockServerConnect(_pollMngServer_t * sCon)
+/* \brief Creates a "ConnectionListener".  
+ * \param sCon _pollMngSrc um diese connection mit poll bedienen zu können
+ * \return 0 on success otherwise -1
+ * \retval 0 on success
+ * \retval -1 bie einem Fehler, errno wird gesetzt
+ */
+int sockServerConnect(_pollMngSrc_t * sCon)
 {   
  
   //hupFnk wird hier belegt und darf nicht userdefined sein
-  if(sCon->pPollSrc->pollhupFnk)
+  if(sCon->pollhupFnk)
     {
       errno = EINVAL;
       return -1;
     }
 
-  sCon->pPollSrc->userDat = (void *)sCon;// Server-struct bekannt machen
-  sCon->pPollSrc->pollhupFnk = ServerPollHupFnk;//hupFnk belegen 
-  sCon->pPollSrc->conListenerFnk = ServerPollConListener;//Con-Listener scharf machen
+  sCon->userDat = (void *)sCon;// Server-struct bekannt machen
+  sCon->pollhupFnk = ServerPollHupFnk;//hupFnk belegen 
+  sCon->conListenerFnk = ServerPollConListener;//Con-Listener scharf machen
 
   //wir hören hier auf dem socket bis eine connection akzeptiert wurde,
   //danach ist sCon->pPollSrc->fd der fd der Verbindung 
-  sCon->pPollSrc->fd = ServerSocketFd;
+  sCon->fd = ServerSocketFd;
 
   return 0;
 }
-
-int sockServerClose(_pollMngServer_t * sCon)
-{
-  //ec_neg1(close(sCon->socketFd) )
-  ec_neg1(close(sCon->pPollSrc->fd) )
-    return 0;;
-  
-  EC_CLEANUP_BGN
-    return 1;
-  EC_CLEANUP_END
-}
-
 
 /*#define SOCKNAME "RUPSOCKET"
 int main(void)
