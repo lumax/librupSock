@@ -61,16 +61,18 @@ int sockClientConnect(_pollMngSrc_t * sCon,char * socketname)
   EC_CLEANUP_END
 }
 
-static int ServerPollReadFnk(char * buf,int len,int pMngIndex,void * dat)
+static int ServerPollConListener(int pMngIndex,void * dat)
 {
   _pollMngServer_t * sCon = (_pollMngServer_t *)dat;
 
   //eine Neue Connection!
-  ec_neg1( sCon->pPollSrc->fd = accept(sCon->socketFd, NULL, 0) )
+  //accept(sCon->pPollSrc->fd  pPollSrc->fd wird im PollMng fürs polling benutzt
+  ec_neg1( sCon->pPollSrc->fd = accept(sCon->pPollSrc->fd, NULL, 0) )
     
-  //original Fnkpnt wiederherstellen 
-  sCon->pPollSrc->readFnk = sCon->readFnk;
+  sCon->pPollSrc->conListenerFnk=0;//conListenerFnk deaktivieren
   
+  ec_neg1(pollMngSetSrc(sCon->pPollSrc,pMngIndex))//den pollMng über die neuen Verhältnisse informieren
+
   return 0;
   
   EC_CLEANUP_BGN
@@ -78,19 +80,38 @@ static int ServerPollReadFnk(char * buf,int len,int pMngIndex,void * dat)
   EC_CLEANUP_END
 }
 
-static int ServerPollHupFnk(int index,void * dat)
+/* \brief Die Verbindung wurde beendet, auf dem Socket auf eine Neue warten.
+ */
+static int ServerPollHupFnk(int pMngIndex,void * dat)
 {
+  _pollMngServer_t * sCon = (_pollMngServer_t *)dat;
+  
+  ec_neg1(close(sCon->pPollSrc->fd) )
+  
+  sCon->pPollSrc->fd = sCon->socketFd;//wir höhren jetzt wieder am Socket
+  sCon->pPollSrc->conListenerFnk = ServerPollConListener;//conListener wieder scharf machen
+ 
+  
+  ec_neg1(pollMngSetSrc(sCon->pPollSrc,pMngIndex))//den pollMng über die neuen Verhältnisse informieren
+
+  return 0;
+  
+  EC_CLEANUP_BGN
+    return -1;
+  EC_CLEANUP_END 
   return 0;
 }
 
 int sockServerConnect(_pollMngServer_t * sCon,char * socketname)
 {   
-  struct sockaddr_un sa;
-  /* if(sCon->pPollSrc->pollhupFnk)
+  struct sockaddr_un sa;  
+  
+  //hupFnk wird hier belegt und darf nicht userdefined sein
+  if(sCon->pPollSrc->pollhupFnk)
     {
       errno = EINVAL;
       return -1;
-      }*/
+    }
 
   (void)unlink(socketname);
   strcpy(sa.sun_path, socketname);
@@ -98,17 +119,18 @@ int sockServerConnect(_pollMngServer_t * sCon,char * socketname)
   ec_neg1( sCon->socketFd = socket(AF_UNIX, SOCK_STREAM, 0) ) 
 
   ec_neg1( bind(sCon->socketFd, (struct sockaddr *)&sa, sizeof(sa)) )
-  ec_neg1( listen(sCon->socketFd, 2) )//SOMAXCONN) )
+  ec_neg1( listen(sCon->socketFd, SOMAXCONN) )
 
-    /*  sCon->pPollSrc->userDat = (void *)sCon;// Server-struct bekannt machen
-  sCon->readFnk = sCon->pPollSrc->readFnk;     //Fnk pointer sichern
-  sCon->pollhupFnk = sCon->pPollSrc->pollhupFnk;
+  sCon->pPollSrc->userDat = (void *)sCon;// Server-struct bekannt machen
+  sCon->pPollSrc->pollhupFnk = ServerPollHupFnk;//hupFnk belegen 
+  sCon->pPollSrc->conListenerFnk = ServerPollConListener;//Con-Listener scharf machen
 
-  sCon->pPollSrc->readFnk = ServerPollReadFnk;//Fnkpnt mit listenern belegen
-  sCon->pPollSrc->pollhupFnk = ServerPollHupFnk;
-  sCon->pPollSrc->*/
+  //wir hören hier auf dem socket bis eine connection akzeptiert wurde,
+  //danach ist sCon->pPollSrc->fd der fd der Verbindung 
+  sCon->pPollSrc->fd = sCon->socketFd;    
 
-  ec_neg1( sCon->pPollSrc->fd = accept(sCon->socketFd, NULL, 0) )
+  //wird in ListenerReadFnk erledigt
+  //ec_neg1( sCon->pPollSrc->fd = accept(sCon->socketFd, NULL, 0) )
     return 0;
   
   EC_CLEANUP_BGN
@@ -120,10 +142,10 @@ int sockServerClose(_pollMngServer_t * sCon)
 {
   ec_neg1(close(sCon->socketFd) )
   ec_neg1(close(sCon->pPollSrc->fd) )
-    exit(EXIT_SUCCESS);
+    return 0;;
   
   EC_CLEANUP_BGN
-    exit(EXIT_FAILURE);
+    return 1;
   EC_CLEANUP_END
 }
 
