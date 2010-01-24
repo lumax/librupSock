@@ -85,12 +85,12 @@ static int ServerPollHupFnk(int pMngIndex,void * dat)
 }
 
 static struct sockaddr_un sa_Server;
-/* \brief Creates the Socket ans bind and listen, call this fnk once before any 
+/* \brief Creates the Socket and bind and listen, call this fnk once before any 
  * \brief other fnk.
  * \param socketname Name des ZielSockets
  * \return 0 on success otherwise -1
  * \retval 0 on success
- * \retval -1 bie einem Fehler, errno wird gesetzt
+ * \retval -1 bei einem Fehler, errno wird gesetzt
  */
 int createServerSocketFd(char * socketname)
 {
@@ -113,7 +113,7 @@ int createServerSocketFd(char * socketname)
  * \param sCon _pollMngSrc um diese connection mit poll bedienen zu können
  * \return 0 on success otherwise -1
  * \retval 0 on success
- * \retval -1 bie einem Fehler, errno wird gesetzt
+ * \retval -1 bei einem Fehler, errno wird gesetzt
  */
 int sockServerConnect(_pollMngSrc_t * sCon)
 {   

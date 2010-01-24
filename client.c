@@ -12,6 +12,8 @@ Bastian Ruppert
 #include <pollManager.h>
 #include <rupSock.h>
 
+#include "rupPrtl.h"
+
 #define SOCKNAME "RUPSOCKET"
 
 static _pollMngSrcContainer_t PollSrc;
@@ -57,11 +59,15 @@ static _pollMngSrcContainer_t PollSrc={
 
 int main(void)
 {
-  printf("client2000\n");
-
+  char * msg = "client2000\n";
+  printf("%s",msg);
+  //printf("sizeof _pollMngSrc_t : %i\n",sizeof(_pollMngSrc_t));
+  //printf("sizeof PollSrc.Srcs : %i\n",sizeof(PollSrc.Srcs));
   ec_neg1(PollSrc.Srcs[0].fd = sockClientConnect(SOCKNAME) )
     
   ec_neg1( pollMngInit(&PollSrc,2 ) )
+    
+  prtlGetAll(&v1);  
   ec_neg1( write(PollSrc.Srcs[0].fd, "hello\n", 7 ) ) 
     
     ec_neg1( pollMngPoll() )

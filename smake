@@ -8,6 +8,6 @@ CFLAGS+=-g -c -Wall
 LDFLAGS+=-lruputils -lpollManager -lrupSock
 
 
-OBJS = 
+OBJS = server.o 
 
 include $(MAKE_DIR)/global.mak

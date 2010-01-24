@@ -53,7 +53,7 @@ int main(void)
  
   pollMngInit(&PollSrc,2);
 
-  pollMngPoll();
+  pollMngPoll(0);
 
   exit(EXIT_SUCCESS);
   
